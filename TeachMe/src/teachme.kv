@@ -1,0 +1,33 @@
+<-ScreenManager>: 
+
+<DrawScreen>:
+    BoxLayout:
+        canvas.before:
+            Color:
+                rgba: 1, .5, 1, 0.5
+            Rectangle:                           
+                pos: self.pos
+                size: self.size
+                
+<PainterBox@Widget>:
+    drawing: None
+    canvas:
+        Color:
+            rgba: 1, 1, 1, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+<FinalScreen>:
+    BoxLayout:
+        canvas.before:
+            Color:
+                rgba: 1, .5, 1, 0.5
+            Rectangle:                           
+                pos: self.pos
+                size: self.size
+        Label:
+            center: self.parent.center
+            font_size: '74sp'
+            text: "THANK YOU"
+                    

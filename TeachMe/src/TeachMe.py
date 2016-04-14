@@ -308,7 +308,7 @@ class DrawScreen(Screen):
         return
 
     def start_animation(self, *args):
-        self.animate(strokes=self.curr_data, wait=0.5, freq=20, strk_interval=1.0)
+        self.animate(strokes=self.curr_data, wait=2.5, freq=10, strk_interval=2.5)
         return
 
     def animate(self, strokes, wait=0.5, freq=20, strk_interval=1.0):
@@ -402,7 +402,7 @@ class TeachMeApp(App):
         # <hyin/Mar-31st-2016> note the message structure, Kivy/ROS seems to eat the exception throwed
         # also it is hard to observe this due to the absence of type checkin in compiling time
         for path in msg.paths:
-            stroke = np.array([[pose.pose.position.x, pose.pose.position.y] for pose in path.poses])
+            stroke = np.array([[pose.pose.position.x, -pose.pose.position.y] for pose in path.poses])
             received_char.append(stroke)
         self.drawscreen.curr_data = received_char
         self.drawscreen.start_animation()
@@ -413,7 +413,7 @@ class TeachMeApp(App):
         #to allow the widget to call it
 
         return
-        
+
 if __name__ == '__main__':
     app = TeachMeApp()
 

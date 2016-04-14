@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 '''
-Publish marker and frame representing a writing surface, either with an 
-interactive marker or wherever a fiducial marker has been detected (e.g. a 
+Publish marker and frame representing a writing surface, either with an
+interactive marker or wherever a fiducial marker has been detected (e.g. a
 chilitag).
 '''
 
@@ -151,28 +151,28 @@ def make6DofMarker( fixed = False ):
 
 if __name__=="__main__":
     rospy.init_node("writing_surface_positioner")
-        
+
     #method used for positioning the writing surface frame
     POSITIONING_METHOD = rospy.get_param('~positioning_method',
                                             'interactive_marker')
-    
-    #name of frame to publish as writing surface origin (at bottom left, with 
-    #x horizontal and y vertical)
-    FRAME_ID = rospy.get_param('~writing_surface_frame_id','writing_surface') 
 
-    #size of marker to be displayed (default values for the galaxy note 10.1 
+    #name of frame to publish as writing surface origin (at bottom left, with
+    #x horizontal and y vertical)
+    FRAME_ID = rospy.get_param('~writing_surface_frame_id','writing_surface')
+
+    #size of marker to be displayed (default values for the galaxy note 10.1
     #in landscape orientation
-    SURFACE_WIDTH = rospy.get_param('~surface_width',0.217) 
+    SURFACE_WIDTH = rospy.get_param('~surface_width',0.217)
     SURFACE_HEIGHT = rospy.get_param('~surface_height',0.136)
-        
-    
+
+
     if(POSITIONING_METHOD.lower() == "fiducial_marker_detection"):
-        TAG_FRAME = rospy.get_param('~tag_frame_id','tag_1') #name of frame to 
-                                                #detect writing surface with 
-        ROTATE_TAG_FRAME = rospy.get_param('~rotate_tag_frame',True) #chilitag 
+        TAG_FRAME = rospy.get_param('~tag_frame_id','tag_1') #name of frame to
+                                                #detect writing surface with
+        ROTATE_TAG_FRAME = rospy.get_param('~rotate_tag_frame',True) #chilitag
         #frame has y horizontal and x vertical (graphics coordinate system) and
         #needs to be changed to 'robotics' coordinate system
-        
+
         tf_listener = tf.TransformListener(True, rospy.Duration(10))
         rospy.sleep(.5)
         rate = rospy.Rate(50)
@@ -184,11 +184,11 @@ if __name__=="__main__":
                 (trans,rot) = tf_listener.lookupTransform("map", TAG_FRAME, t)
             except (tf.Exception, tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                 continue
-                
+
             #rotate coordinate system of tag to match the desired one for the tablet
             surfacePose = PoseStamped()
             surfacePose.header.frame_id = TAG_FRAME
-            
+
             if(ROTATE_TAG_FRAME):
                 #convert 'x up, y to the right' of chilitag from to 'y up, x to the right' for the writing surface
                 orientation = tf.transformations.quaternion_from_euler(3.14159,0,3.14159/2)
@@ -204,13 +204,13 @@ if __name__=="__main__":
             pub_markers.publish(writing_surface()) #show writing surface
 
         rate.sleep()
-    
+
     elif(POSITIONING_METHOD.lower() == "interactive_marker"):
         NAO_HANDEDNESS = rospy.get_param('~nao_handedness','right')
-        
+
         #assign default values of pose
         frame_pose = Pose()
-        #use values from 'rosrun tf tf_echo map writing_surface' with  
+        #use values from 'rosrun tf tf_echo map writing_surface' with
         #interactive marker in desired position
         if(NAO_HANDEDNESS.lower() == 'right'):
             frame_pose.orientation.x = -0.4
@@ -230,13 +230,58 @@ if __name__=="__main__":
             frame_pose.position.z = 0.27
         else:
             rospy.logerr('error in handedness input')
-        
+
         server = InteractiveMarkerServer("writing_surface_placer")
 
         make6DofMarker(fixed = True)
 
         # 'commit' changes and send to all clients
         server.applyChanges()
+
+        rate = rospy.Rate(10.0)
+        while not rospy.is_shutdown():
+            if frame_pose:
+                p = frame_pose.position
+                o = frame_pose.orientation
+                tf_broadcaster.sendTransform((p.x, p.y, p.z),
+                                (o.x, o.y, o.z, o.w),
+                                rospy.Time.now(),
+                                FRAME_ID,
+                                "map")
+            rate.sleep()
+    #<hyin/Apr-14th-2016> add a dummy surface
+    elif(POSITIONING_METHOD.lower() == "dummy_surface"):
+        NAO_HANDEDNESS = rospy.get_param('~nao_handedness','right')
+
+        #assign default values of pose
+        frame_pose = Pose()
+        #use values from 'rosrun tf tf_echo map writing_surface' with
+        #interactive marker in desired position
+        if(NAO_HANDEDNESS.lower() == 'right'):
+            frame_pose.orientation.x = 0.5
+            frame_pose.orientation.y = -0.5
+            frame_pose.orientation.z = -0.5
+            frame_pose.orientation.w = 0.5
+            frame_pose.position.x = 0.14
+            frame_pose.position.y = -0.12
+            frame_pose.position.z = 0.32
+        elif(NAO_HANDEDNESS.lower() == 'left'):
+            frame_pose.orientation.x = 0.5
+            frame_pose.orientation.y = -0.5
+            frame_pose.orientation.z = -0.5
+            frame_pose.orientation.w = 0.5
+            frame_pose.position.x = 0.14
+            frame_pose.position.y = 0.12
+            frame_pose.position.z = 0.32
+        else:
+            rospy.logerr('error in handedness input')
+
+        # server = InteractiveMarkerServer("writing_surface_placer")
+        #
+        # make6DofMarker(fixed = True)
+        #
+        # # 'commit' changes and send to all clients
+        # server.applyChanges()
 
         rate = rospy.Rate(10.0)
         while not rospy.is_shutdown():

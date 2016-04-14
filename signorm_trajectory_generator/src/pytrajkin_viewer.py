@@ -550,17 +550,24 @@ class PyTrajKin_GUI(QMainWindow):
         return
 
     def on_send_char(self):
+        #<hyin/Apr-12th-2016> add timestamp for each way point. This is desired by the NAOqi SDK
+        t0 = 2.5
+        dt = 0.1
         #first try to send perturbed data
         if self.char_mdl:
             msg = MultiPaths()
             for curr_idx in range(len(self.char_mdl)):
                 mdl, t_array, opt_parms, traj_opt, vel_vec_opt, theta_opt  = self.get_perturbed_trajectory_and_parms(curr_idx)
                 tmp_path = Path()
+                tmp_path.header.frame_id = 'writing_surface'
+                # tmp_path.header.stamp = rospy.Time.now()
                 tmp_path.poses = [None] * len(traj_opt)
                 for idx, pnt in enumerate(traj_opt):
                     tmp_path.poses[idx] = PoseStamped()
                     tmp_path.poses[idx].pose.position.x = pnt[0]
-                    tmp_path.poses[idx].pose.position.y = pnt[1]
+                    tmp_path.poses[idx].pose.position.y = -pnt[1]
+                    tmp_path.poses[idx].header.frame_id = 'writing_surface';
+                    tmp_path.poses[idx].header.stamp = rospy.Time(t0+idx*dt); #assume constant time between points for now
                 msg.paths.append(tmp_path)
             #send this
             msg.header.frame_id = 'writing_surface'
@@ -575,13 +582,18 @@ class PyTrajKin_GUI(QMainWindow):
             msg = MultiPaths()
             for strk in curr_data:
                 tmp_path = Path()
+                tmp_path.header.frame_id = 'writing_surface'
                 tmp_path.poses = [None] * len(strk)
                 for idx, pnt in enumerate(strk):
                     tmp_path.poses[idx] = PoseStamped()
                     tmp_path.poses[idx].pose.position.x = pnt[0]
-                    tmp_path.poses[idx].pose.position.y = pnt[1]
+                    tmp_path.poses[idx].pose.position.y = -pnt[1]
+                    tmp_path.poses[idx].header.frame_id = 'writing_surface';
+                    tmp_path.poses[idx].header.stamp = rospy.Time(t0+idx*dt); #assume constant time between points for now
                 msg.paths.append(tmp_path)
             #send this
+            msg.header.frame_id = 'writing_surface'
+            msg.header.stamp = rospy.Time.now()
             self.ros_publisher.publish(msg)
             rospy.loginfo('GAIPS_PYTK_VIEWER: Sent character data...')
         return

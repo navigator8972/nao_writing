@@ -1,6 +1,6 @@
 <launch>
     <arg name="use_sim_nao" default="true" />
-    <arg name="nao_handedness" default="right" />
+    <arg name="nao_handedness" default="left" />
     <arg name="nao_ip" default="127.0.0.1" />
     <arg name="nao_wholebody" default="false"/>
 

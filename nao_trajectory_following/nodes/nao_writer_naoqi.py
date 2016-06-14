@@ -80,7 +80,7 @@ def MultiPath_to_ndarray(msg):
 def autofit_msg(msg):
     data = MultiPath_to_ndarray(msg)
     fit_data = autofit_letter(data)
-    print fit_data
+    # print fit_data
     fit_msg = deepcopy(msg)
     for path, strk in zip(fit_msg.paths, fit_data):
         for ps, d in zip(path.poses, strk):
